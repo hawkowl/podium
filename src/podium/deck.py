@@ -37,24 +37,35 @@ class SlideWindow(toga.Window):
 
     @property
     def template_name(self):
-        if self.master:
-            return "slide-template.html"
-        else:
-            return "notes-template.html"
-
+        return "slide-template.html"
     def redraw(self, slide='1'):
-        with open(os.path.join(self.deck.resource_path, self.template_name), 'r') as data:
-            template = data.read()
+        if os.path.exists(os.path.join(self.deck.filename, self.template_name)):
+            with open(os.path.join(self.deck.filename, self.template_name), 'r') as data:
+                template = data.read()
+        else:
+            with open(os.path.join(self.deck.resource_path, self.template_name), 'r') as data:
+                template = data.read()
+
+        if self.master:
+            ins_js = "slideshow.togglePresenterMode();"
+        else:
+            ins_js = ""
 
         content = template.format(
             resource_path=os.path.join(self.deck.resource_path),
+            project_path=self.deck.filename,
             theme=self.deck.theme,
+            inserted_js=ins_js,
             style_overrides=self.deck.style_overrides,
             aspect_ratio_tag=self.deck.aspect.replace(':', '-'),
             aspect_ratio=self.deck.aspect,
             slide_content=self.deck.content,
             slide_number=slide,
         )
+
+        if self.master:
+            with open(os.path.join(self.deck.filename, "rendered.html"), 'w') as data:
+                data.write(content)
 
         self.html_view.set_content(self.deck.fileURL, content)
 
